@@ -857,7 +857,7 @@ public class ConferenceController {
                     + "  \"params\":\n"
                     + "  {\n"
                     + "    \"framework\": 1, \n"
-                    + "    \"component\": 18, \n"
+                    + "    \"component\": 24, \n"
                     + "    \"language\": 1\n"
                     + "  }\n"
                     + "}";
