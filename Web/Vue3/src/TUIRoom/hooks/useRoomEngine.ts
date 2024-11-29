@@ -13,7 +13,7 @@ TUIRoomEngine.once('ready', () => {
     JSON.stringify({
       api: 'setFramework',
       params: {
-        component: 'TUIRoomKit',
+        component: 'Classroom',
         language: vueVersion,
       },
     })
