@@ -4,7 +4,6 @@
     :class="{
       'horizontal-infinity-layout': isHorizontalInfinityLayout,
       'vertical-infinity-layout': isVerticalInfinityLayout,
-      'equal-points-layout': isEqualPointsLayout,
     }"
   >
     <div
@@ -233,18 +232,6 @@ function handleLayout() {
 onMounted(() => {
   handleLayout();
 });
-
-watch(
-  () => [
-    props.horizontalCount,
-    props.verticalCount,
-    props.streamInfoList.length,
-  ],
-  () => {
-    handleLayout();
-  },
-  { immediate: true }
-);
 
 const resizeObserver = new ResizeObserver(() => {
   handleLayout();

@@ -20,7 +20,7 @@ function getDefaultLayout() {
   if (isMobile) {
     return isWeChat ? LAYOUT.SIX_EQUAL_POINTS : LAYOUT.LARGE_SMALL_WINDOW;
   }
-  return LAYOUT.NINE_EQUAL_POINTS;
+  return LAYOUT.RIGHT_SIDE_LIST;
 }
 
 interface BasicState {

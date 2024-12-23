@@ -2,7 +2,6 @@
   <div class="header-container">
     <div class="left-container">
       <switch-theme class="header-item" />
-      <layout-control class="header-item" />
       <network-info class="header-item" />
     </div>
     <div class="center-container">

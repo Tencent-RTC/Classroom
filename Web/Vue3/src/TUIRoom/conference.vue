@@ -6,7 +6,6 @@
     :class="tuiRoomClass"
   >
     <room-header
-      v-show="showRoomTool && showHeaderTool"
       class="header"
       @log-out="logOut"
     />
@@ -17,7 +16,6 @@
       class="content"
     />
     <room-footer
-      v-show="showRoomTool"
       class="footer"
       @show-overlay="handleShowOverlay"
     />
@@ -401,10 +399,21 @@ const onKickedOffLine = (eventInfo: { message: string }) => {
 
   .content {
     position: absolute;
-    top: 0;
+    top: 64px;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 128px);
     background-color: var(--background-color-1);
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    width: 100%;
+    height: 64px;
+    background-color: var(--background-color-2);
+    box-shadow: 0 1px 0 var(--header-shadow-color);
   }
 
   &.tui-room-h5 {
