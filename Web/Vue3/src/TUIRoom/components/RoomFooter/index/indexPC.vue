@@ -19,6 +19,7 @@
     </div>
     <div class="center-container">
       <screen-share-control
+        v-if="isMaster"
         class="center-container-item"
         @click="handleControlClick('screenShareControl')"
       />

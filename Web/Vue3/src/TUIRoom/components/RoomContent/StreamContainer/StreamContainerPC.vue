@@ -1,26 +1,21 @@
 <template>
   <div id="streamContainer" :class="streamContainerClass">
-    <div
-      v-show="enlargeStream"
-      ref="enlargedContainerRef"
-      class="enlarged-stream-container"
-    >
+    <div 
+      class="enlarged-stream-container">
       <StreamRegion
-        v-if="enlargeStream"
-        :streamInfo="enlargeStream"
-        aspectRatio="16:9"
-        :isEnlarge="true"
-        :observerViewInVisible="true"
-      />
+        v-if="enlargeStream && !isMaster"
+        :stream-info="enlargeStream" aspect-ratio="16:9"
+        :is-enlarge="true"
+        :observer-view-in-visible="true" />
+      <Whiteboard v-if="isMaster" class="whiteboard" />
     </div>
     <StreamList
       :class="['stream-list-container', `${showSideList ? '' : 'hide-list'}`]"
-      :streamInfoList="showStreamList"
-      :horizontalCount="horizontalCount"
-      :verticalCount="verticalCount"
-      aspectRatio="16:9"
-      :observerViewInVisible="true"
-      @room-dblclick="handleEnlargeStreamRegion"
+      :stream-info-list="showStreamList"
+      :horizontal-count="horizontalCount"
+      :vertical-count="verticalCount"
+      aspect-ratio="16:9"
+      :observer-view-in-visible="true"
     />
     <!-- Sidebar and upper sidebar arrows -->
     <arrow-stroke
@@ -52,17 +47,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, Ref, watch, computed, defineProps } from 'vue';
+import { ref, onUnmounted, Ref, watch, computed, defineProps, nextTick } from 'vue';
 import { storeToRefs } from 'pinia';
 import { StreamInfo, useRoomStore } from '../../../stores/room';
 import { useBasicStore } from '../../../stores/basic';
 import { LAYOUT } from '../../../constants/render';
 import StreamRegion from '../StreamRegion';
+import Whiteboard from '../../Whiteboard/index.vue';
 import StreamList from '../StreamList/index.vue';
 import logger from '../../../utils/common/logger';
+import eventBus from '../../../hooks/useMitt';
 import ArrowStrokeTurnPageIcon from '../../common/icons/ArrowStrokeTurnPageIcon.vue';
 import ArrowStroke from '../../common/ArrowStroke.vue';
 import SvgIcon from '../../common/base/SvgIcon.vue';
+import { roomService, MetricsKey } from '../../../services';
 
 import TUIRoomEngine, {
   TUIUserInfo,
@@ -70,6 +68,7 @@ import TUIRoomEngine, {
   TUIRoomEvents,
   TUIVideoStreamType,
   TUISeatInfo,
+  TRTCVideoStreamType,
 } from '@tencentcloud/tuiroom-engine-js';
 import useGetRoomEngine from '../../../hooks/useRoomEngine';
 
@@ -81,7 +80,7 @@ defineProps<{
 }>();
 
 const roomStore = useRoomStore();
-const { streamList, streamNumber, remoteStreamList } = storeToRefs(roomStore);
+const { streamList, streamNumber, remoteStreamList, isMaster, isSharingWhiteboard } = storeToRefs(roomStore);
 const basicStore = useBasicStore();
 const { layout } = storeToRefs(basicStore);
 const showSideList = ref(true);
@@ -96,7 +95,6 @@ const maxCountEveryPage = computed(
 const totalPage = computed(() =>
   Math.ceil(streamList.value.length / maxCountEveryPage.value)
 );
-
 /**
  * Show left and right page flip icons
  **/
@@ -146,22 +144,20 @@ const showStreamList = computed(() => {
 });
 
 watch(
-  () => streamList.value.length,
-  val => {
-    // When there is only one stream, switch to a nine-grid layout
-    if (val === 1) {
-      basicStore.setLayout(LAYOUT.NINE_EQUAL_POINTS);
-      enlargeStream.value = null;
-      return;
+  () => isMaster.value,
+  async (val) => {
+    if (val) {
+      roomService.dataReportManager.reportCount(MetricsKey.startSharingWhiteboard);
+      await nextTick();
+      await startShareWhiteboard();
     }
-  }
+  },
 );
 
 /**
  * ----- The following processing stream layout ---------
  **/
-const streamContainerClass = ref('stream-container-flatten');
-const enlargedContainerRef = ref();
+const streamContainerClass = ref('stream-container-right');
 
 const arrowDirection = computed(() => {
   let arrowDirection = 'right';
@@ -263,9 +259,6 @@ function handleEnlargeStreamRegion(stream: StreamInfo) {
  **/
 async function handleLayout() {
   switch (layout.value as any) {
-    case LAYOUT.NINE_EQUAL_POINTS:
-      handleNineEqualPointsLayout();
-      break;
     case LAYOUT.RIGHT_SIDE_LIST:
       handleRightSideListLayout();
       break;
@@ -381,6 +374,32 @@ const handleLargeStreamLeave = () => {
   }
 };
 
+async function onScreenOrWhiteboardCaptureStopped() {
+  if (isSharingWhiteboard.value) {
+    roomStore.setIsSharingWhiteboard(false);
+  } else {
+    await nextTick();
+    await startShareWhiteboard();
+  }
+}
+
+function onScreenShareCanceled() {
+  startShareWhiteboard();
+}
+
+eventBus.on('screenShareCanceled', onScreenShareCanceled);
+
+async function startShareWhiteboard() {
+  const canvasElt = document.getElementById('whiteboard');
+  if (!canvasElt) {
+    return;
+  }
+  const stream = (canvasElt as HTMLCanvasElement).captureStream(15);
+  const videoTrack = stream?.getVideoTracks()[0];
+  await roomEngine.instance?.getTRTCCloud().startScreenShare(null, TRTCVideoStreamType.TRTCVideoStreamTypeSub, { videoTrack });
+  roomStore.setIsSharingWhiteboard(true);
+}
+
 TUIRoomEngine.once('ready', () => {
   roomEngine.instance?.on(
     TUIRoomEvents.onRemoteUserLeaveRoom,
@@ -391,9 +410,14 @@ TUIRoomEngine.once('ready', () => {
     TUIRoomEvents.onUserVideoStateChanged,
     onUserVideoStateChanged
   );
+  roomEngine.instance?.on(
+    TUIRoomEvents.onUserScreenCaptureStopped,
+    onScreenOrWhiteboardCaptureStopped
+  );
 });
 
 onUnmounted(() => {
+  eventBus.off('screenShareCanceled', onScreenShareCanceled);
   roomEngine.instance?.off(
     TUIRoomEvents.onRemoteUserLeaveRoom,
     onRemoteUserLeaveRoom
@@ -402,6 +426,10 @@ onUnmounted(() => {
   roomEngine.instance?.off(
     TUIRoomEvents.onUserVideoStateChanged,
     onUserVideoStateChanged
+  );
+  roomEngine.instance?.off(
+    TUIRoomEvents.onUserScreenCaptureStopped,
+    onScreenOrWhiteboardCaptureStopped
   );
 });
 </script>
@@ -466,7 +494,18 @@ onUnmounted(() => {
     justify-content: center;
     min-width: 0;
     min-height: 0;
-    padding: 25px 20px;
+    padding: 2px;
+
+    .whiteboard {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
   }
 
   .stream-list-container {
@@ -501,8 +540,20 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     width: calc(100% - 280px);
-    height: calc(100%);
-    padding: 25px 20px;
+    height: 100%;
+    padding: 2px;
+
+    .whiteboard {
+      position: relative;
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
   }
 
   .stream-list-container {

@@ -184,7 +184,12 @@ function cancelStop() {
   dialogVisible.value = false;
 }
 
+async function stopWhiteboard() {
+  await roomEngine.instance?.getTRTCCloud().stopScreenShare();
+}
+
 async function startScreenShare() {
+  await stopWhiteboard();
   isShowFraudDialog.value = false;
   try {
     await roomEngine.instance?.startScreenSharing();
@@ -213,6 +218,7 @@ async function startScreenShare() {
           );
         } else {
           // User rejects/cancels screen sharing
+          eventBus.emit('screenShareCanceled');
           message = t('User canceled screen sharing');
         }
         break;

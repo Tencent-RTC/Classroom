@@ -143,6 +143,7 @@ interface RoomState {
   isWhiteboardVisiable: boolean;
   isSharingScreen: boolean;
   isAnnotationVisiable: boolean;
+  isSharingWhiteboard: boolean;
 }
 
 export const useRoomStore = defineStore('room', {
@@ -178,6 +179,7 @@ export const useRoomStore = defineStore('room', {
     isWhiteboardVisiable: false,
     isSharingScreen: false,
     isAnnotationVisiable: false,
+    isSharingWhiteboard: false,
   }),
   getters: {
     localUser(state: RoomState): UserInfo {
@@ -666,6 +668,9 @@ export const useRoomStore = defineStore('room', {
         }
       });
     },
+    setIsSharingWhiteboard(isSharingWhiteboard: boolean) {
+      this.isSharingWhiteboard = isSharingWhiteboard;
+    },
     reset() {
       const basicStore = useBasicStore();
       basicStore.setIsOpenMic(false);
@@ -696,6 +701,7 @@ export const useRoomStore = defineStore('room', {
       this.isWhiteboardVisiable = false;
       this.isSharingScreen = false;
       this.isAnnotationVisiable = false;
+      this.isSharingWhiteboard = false;
     },
   },
 });
