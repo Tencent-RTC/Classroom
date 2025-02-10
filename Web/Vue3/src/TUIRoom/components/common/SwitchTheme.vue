@@ -19,11 +19,15 @@ import { withDefaults, defineProps } from 'vue';
 import IconButton from './base/IconButton.vue';
 import SwitchThemeIcon from './icons/SwitchThemeIcon.vue';
 import { IconButtonLayout } from '../../constants/room';
-import { useBasicStore } from '../../stores/basic';
 import { useI18n } from '../../locales';
 import { roomService } from '../../services';
-const basicStore = useBasicStore();
+import { useBasicStore } from '../../stores/basic';
+import { useUIKit } from '@tencentcloud/uikit-base-component-vue3';
+
 const { t } = useI18n();
+const basicStore = useBasicStore();
+const { theme, setTheme } = useUIKit();
+
 const switchThemeConfig = roomService.getComponentConfig('SwitchTheme');
 
 interface Props {
@@ -35,7 +39,13 @@ withDefaults(defineProps<Props>(), {
 });
 
 function handleSwitchTheme() {
-  roomService.setTheme(basicStore.defaultTheme === 'white' ? 'black' : 'white');
+  if (theme.value) {
+    setTheme(theme.value === 'light' ? 'dark' : 'light');
+  } else {
+    roomService.setTheme(
+      basicStore.defaultTheme === 'light' ? 'dark' : 'light'
+    );
+  }
 }
 </script>
 

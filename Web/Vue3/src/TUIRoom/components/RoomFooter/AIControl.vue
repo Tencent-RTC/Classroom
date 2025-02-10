@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, defineEmits } from 'vue';
+import { computed, ref, watch } from 'vue';
 import IconButton from '../common/base/IconButton.vue';
 import AIIcon from '../common/icons/AIIcon.vue';
 import AITranscription from '../common/icons/AITranscription.vue';
@@ -31,9 +31,13 @@ import AISubtitlesIcon from '../common/icons/AISubtitles.vue';
 import { roomService } from '../../services';
 import { useI18n } from '../../locales';
 import SvgIcon from '../common/base/SvgIcon.vue';
+import {
+  useRoomOverlayHooks,
+  OverlayMap,
+} from '../RoomOverlay/useRoomOverlayHooks.ts';
 
+const { toggleOverlayVisibility } = useRoomOverlayHooks();
 const { t } = useI18n();
-const emit = defineEmits(['show-overlay']);
 const AIControlConfig = roomService.getComponentConfig('AIControl');
 const { basicStore } = roomService;
 
@@ -67,10 +71,7 @@ const toggleAITranscription = () => {
 const openAISubtitles = () => {
   showSubtitles.value = !showSubtitles.value;
   showToolBox.value = false;
-  emit('show-overlay', {
-    name: 'AISubtitlesOverlay',
-    visible: showSubtitles.value,
-  });
+  toggleOverlayVisibility(OverlayMap.AISubtitlesOverlay, showSubtitles.value);
 };
 </script>
 <style lang="scss" scoped>
@@ -83,9 +84,9 @@ const openAISubtitles = () => {
   align-items: center;
   justify-content: center;
   padding: 5px 0;
-  background-color: var(--background-color-2);
   border-radius: 15px;
-  box-shadow: 0 -8px 30px var(--footer-shadow-color);
+  background-color: var(--bg-color-dialog);
+  box-shadow: 0 -8px 30p var(--uikit-color-black-8);
 
   .tool-box-item {
     display: flex;
@@ -103,15 +104,8 @@ const openAISubtitles = () => {
   }
 
   .tool-box-item:hover {
-    background: var(--tool-box-hover);
+    border-radius: 8px;
+    background-color: var(--list-color-hover);
   }
-}
-
-.tui-theme-black .tool-box {
-  --tool-box-hover: rgba(46, 50, 61, 0.7);
-}
-
-.tui-theme-white .tool-box {
-  --tool-box-hover: rgba(79, 88, 107, 0.05);
 }
 </style>

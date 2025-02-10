@@ -18,16 +18,24 @@
       fill="currentColor"
       mask="url(#path-1-inside-1_9286_2150)"
     />
-    <path d="M3 12L7 8" stroke="var(--active-color-2)" stroke-width="1.7" />
-    <path d="M18 12L22 8" stroke="var(--active-color-2)" stroke-width="1.7" />
+    <path
+      d="M3 12L7 8"
+      stroke="var(--uikit-color-theme-5)"
+      stroke-width="1.7"
+    />
+    <path
+      d="M18 12L22 8"
+      stroke="var(--uikit-color-theme-5)"
+      stroke-width="1.7"
+    />
     <path
       d="M2.00098 7L6.00098 3"
-      stroke="var(--active-color-2)"
+      stroke="var(--uikit-color-theme-5)"
       stroke-width="1.7"
     />
     <path
       d="M17.001 7L21.001 3"
-      stroke="var(--active-color-2)"
+      stroke="var(--uikit-color-theme-5)"
       stroke-width="1.7"
     />
   </svg>

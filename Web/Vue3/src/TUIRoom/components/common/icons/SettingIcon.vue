@@ -23,7 +23,7 @@
       cx="12"
       cy="12"
       r="1.5"
-      style="fill: var(--active-color-2); fill-opacity: 1"
+      style="fill: var(--uikit-color-theme-5); fill-opacity: 1"
     />
   </svg>
 </template>

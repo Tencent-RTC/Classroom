@@ -10,6 +10,7 @@ import {
 } from '@tencentcloud/tuiroom-engine-js';
 import { EventType, IRoomService } from '../types';
 import mitt from 'mitt';
+import { FetchRoomInfoErrorCode } from './roomActionManager.ts';
 export * from '@tencentcloud/tuiroom-engine-js';
 interface IScheduleConferenceManager {
   on(
@@ -52,8 +53,7 @@ interface IScheduleConferenceManager {
   replaceFriendList(
     userList: Array<{
       userID: string;
-      avatar: string;
-      nick: string;
+      profile: { userID: string; nick: string; avatar: string };
     }>
   ): void;
 }
@@ -75,7 +75,7 @@ export interface IScheduleConferenceOptions {
   maxSeatCount?: number;
   password?: string;
 }
-
+const MAX_ATTEMPTS = 5;
 export class ScheduleConferenceManager implements IScheduleConferenceManager {
   private service: IRoomService;
   private customFriendList?: Array<any>;
@@ -234,11 +234,32 @@ export class ScheduleConferenceManager implements IScheduleConferenceManager {
   replaceFriendList(
     userList: Array<{
       userID: string;
-      avatar: string;
-      nick: string;
+      profile: { userID: string; nick: string; avatar: string };
     }>
   ) {
     this.customFriendList = userList;
+  }
+
+  async generateRoomId(attempt = 1): Promise<string> {
+    if (attempt > MAX_ATTEMPTS) {
+      throw new Error(
+        'Failed to generate a unique room ID after maximum attempts.'
+      );
+    }
+
+    const roomId = String(Math.ceil(Math.random() * 1000000));
+    try {
+      await this.service.roomActionManager?.fetchRoomInfo({
+        roomId,
+        roomType: TUIRoomType.kConference,
+      });
+      return await this.generateRoomId(attempt + 1);
+    } catch (err: any) {
+      if (err?.code === FetchRoomInfoErrorCode.ROOM_NOT_EXIST) {
+        return roomId;
+      }
+      throw err;
+    }
   }
 
   async scheduleConference(options: IScheduleConferenceOptions) {

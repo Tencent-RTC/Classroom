@@ -1,8 +1,8 @@
 import { getUrlParam } from './utils';
 
 const THEME = {
-  LIGHT: 'white',
-  DARK: 'black',
+  LIGHT: 'light',
+  DARK: 'dark',
 };
 
 type ThemeOption = 'LIGHT' | 'DARK';
@@ -44,3 +44,9 @@ export const invalidDigitalPasswordRegex = /[^\d]+/g;
 // RoomKit enter room Password legitimacy verification
 export const invalidPasswordRegex =
   /[^A-Za-z0-9!@#$%^&*()_+{}|:"<>?`~';[\]\\/.,-=]+/g;
+
+export enum ClassType {
+  OneToOneClass = 0,
+  SmallClass = 1,
+  LargeClass = 2,
+}

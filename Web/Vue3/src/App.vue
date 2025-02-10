@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { UIKitProvider } from '@tencentcloud/uikit-base-component-vue3';
 </script>
 
 <template>
-  <router-view></router-view>
+  <UIKitProvider theme="light">
+    <router-view></router-view>
+  </UIKitProvider>
 </template>
 
 <style lang="scss">

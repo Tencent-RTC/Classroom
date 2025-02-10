@@ -5,10 +5,7 @@
     ref="roomRef"
     :class="tuiRoomClass"
   >
-    <room-header
-      class="header"
-      @log-out="logOut"
-    />
+    <room-header v-show="showRoomTool && showHeaderTool" class="header" />
     <room-content
       ref="roomContentRef"
       v-tap.lazy="handleRoomContentTap"
@@ -16,12 +13,13 @@
       class="content"
     />
     <room-footer
+      v-show="showRoomTool"
       class="footer"
       @show-overlay="handleShowOverlay"
     />
     <room-sidebar />
     <room-setting />
-    <AISubtitlesOverlay v-if="overlayMap.AISubtitlesOverlay.visible" />
+    <room-overlay />
     <RoomInviteOverlay v-if="overlayMap.RoomInviteOverlay.visible" />
     <loading-overlay v-if="isShowLoading" />
     <password-dialog
@@ -49,9 +47,9 @@ import RoomFooter from './components/RoomFooter/index';
 import RoomSidebar from './components/RoomSidebar';
 import RoomContent from './components/RoomContent/index.vue';
 import RoomSetting from './components/RoomSetting/index.vue';
+import RoomOverlay from './components/RoomOverlay/RoomOverlay.vue';
 import LoadingOverlay from './components/PreRoom/LoadingOverlay.vue';
 import PasswordDialog from './components/PreRoom/PasswordDialog.vue';
-import AISubtitlesOverlay from './components/AITools/AISubtitles.vue';
 import RoomInviteOverlay from './components/RoomInvite';
 import { debounce, throttle } from './utils/utils';
 import { useBasicStore } from './stores/basic';
@@ -75,6 +73,10 @@ import {
 } from './services/index';
 import useDeviceManager from './hooks/useDeviceManager';
 import useCustomizedAutoPlayDialog from './hooks/useCustomizedAutoPlayDialog';
+import { storeToRefs } from 'pinia';
+import { useUIKit } from '@tencentcloud/uikit-base-component-vue3';
+
+const { theme } = useUIKit();
 
 const isShowPasswordContainer = ref(false);
 const isShowLoading = ref(true);
@@ -183,7 +185,6 @@ onMounted(() => {
   roomService.on(EventType.ROOM_JOIN, onJoinRoom);
   roomService.on(EventType.ROOM_LEAVE, onLeaveRoom);
   roomService.on(EventType.ROOM_DISMISS, onDismissRoom);
-  roomService.on(EventType.USER_LOGOUT, onLogout);
   roomService.on(EventType.ROOM_NEED_PASSWORD, onRoomNeedPassword);
 });
 onUnmounted(() => {
@@ -196,7 +197,6 @@ onUnmounted(() => {
   roomService.off(EventType.ROOM_JOIN, onJoinRoom);
   roomService.off(EventType.ROOM_LEAVE, onLeaveRoom);
   roomService.off(EventType.ROOM_DISMISS, onDismissRoom);
-  roomService.off(EventType.USER_LOGOUT, onLogout);
   roomService.off(EventType.ROOM_NEED_PASSWORD, onRoomNeedPassword);
   roomService.resetStore();
 });
@@ -205,7 +205,7 @@ const { showHeaderTool } = roomService.basicStore;
 const tuiRoomClass = computed(() => {
   const roomClassList = [
     'tui-room',
-    `tui-theme-${roomService.basicStore.defaultTheme}`,
+    theme.value ? '' : `tui-theme-${roomService.basicStore.defaultTheme}`,
   ];
   if (isMobile) {
     roomClassList.push('tui-room-h5');
@@ -221,10 +221,10 @@ const tuiRoomClass = computed(() => {
  *
  **/
 const roomContentRef = ref<InstanceType<typeof RoomContent>>();
-const showRoomTool: Ref<boolean> = ref(true);
 const roomRef: Ref<Node | undefined> = ref();
+const { showRoomTool } = storeToRefs(basicStore);
 function handleHideRoomTool() {
-  showRoomTool.value = false;
+  basicStore.setShowRoomTool(false);
 }
 
 watch(
@@ -243,11 +243,11 @@ watch(
 const handleHideRoomToolDebounce = debounce(handleHideRoomTool, 5000);
 const handleHideRoomToolThrottle = throttle(handleHideRoomToolDebounce, 1000);
 const showTool = () => {
-  showRoomTool.value = true;
+  basicStore.setShowRoomTool(true);
   handleHideRoomToolDebounce();
 };
 const showToolThrottle = () => {
-  showRoomTool.value = true;
+  basicStore.setShowRoomTool(true);
   handleHideRoomToolThrottle();
 };
 const hideTool = () => {
@@ -267,7 +267,7 @@ const removeRoomContainerEvent = (container: Node) => {
 };
 
 function handleRoomContentTap() {
-  showRoomTool.value = !showRoomTool.value;
+  basicStore.setShowRoomTool(!showRoomTool.value);
   if (showRoomTool.value) {
     handleHideRoomToolDebounce();
   }
@@ -314,10 +314,6 @@ function resetStore() {
   roomService.resetStore();
 }
 
-const logOut = () => {
-  roomService.logOut();
-};
-
 const onStartRoom = () => {
   isShowLoading.value = false;
   emit('on-create-room', { code: 0, message: 'create room' });
@@ -335,10 +331,6 @@ const onLeaveRoom = () => {
 
 const onDismissRoom = () => {
   emit('on-destroy-room', { code: 0, message: 'destroy room' });
-};
-
-const onLogout = () => {
-  emit('on-log-out', { code: 0, message: 'user logout' });
 };
 
 const onKickedOutOfRoom = async (eventInfo: {
@@ -362,8 +354,7 @@ const onKickedOffLine = (eventInfo: { message: string }) => {
 
 <style lang="scss">
 @import './assets/style/global.scss';
-@import './assets/style/black-theme.scss';
-@import './assets/style/white-theme.scss';
+@import '@tencentcloud/uikit-base-component-vue3/dist/styles/index.css';
 
 .tui-room :not([class|='el']) {
   transition:
@@ -382,38 +373,28 @@ const onKickedOffLine = (eventInfo: { message: string }) => {
   min-width: 850px;
   height: 100%;
   min-height: 400px;
-  color: var(--font-color-1);
   text-align: left;
-  background-color: var(--background-color-1);
+  background-color: var(--bg-color-topbar);
+  color: var(--text-color-primary);
 
   .header {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 100;
+    z-index: 1;
     width: 100%;
     height: 64px;
-    background-color: var(--background-color-2);
-    box-shadow: 0 1px 0 var(--header-shadow-color);
+    background-color: var(--bg-color-topbar);
+    box-shadow: 0 1px 0 var(--uikit-color-black-8);
+    border-bottom: 1px solid var(--stroke-color-primary);
   }
 
   .content {
     position: absolute;
-    top: 64px;
+    top: 0;
     width: 100%;
-    height: calc(100% - 128px);
-    background-color: var(--background-color-1);
-  }
-
-  .footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    width: 100%;
-    height: 64px;
-    background-color: var(--background-color-2);
-    box-shadow: 0 1px 0 var(--header-shadow-color);
+    height: 100%;
+    background-color: var(--bg-color-topbar);
   }
 
   &.tui-room-h5 {
@@ -443,25 +424,5 @@ const onKickedOffLine = (eventInfo: { message: string }) => {
     width: 100%;
     height: 100%;
   }
-}
-
-.tui-theme-white .tui-room {
-  --header-shadow-color: #e3eaf7;
-  --footer-shadow-color: rgba(197, 210, 229, 0.2);
-}
-
-.tui-theme-black .tui-room {
-  --header-shadow-color: rgba(34, 38, 46, 0.3);
-  --footer-shadow-color: rgba(34, 38, 46, 0.3);
-}
-
-.tui-theme-white.tui-room {
-  --header-shadow-color: #e3eaf7;
-  --footer-shadow-color: rgba(197, 210, 229, 0.2);
-}
-
-.tui-theme-black.tui-room {
-  --header-shadow-color: rgba(34, 38, 46, 0.3);
-  --footer-shadow-color: rgba(34, 38, 46, 0.3);
 }
 </style>

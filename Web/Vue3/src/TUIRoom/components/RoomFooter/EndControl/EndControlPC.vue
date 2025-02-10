@@ -22,14 +22,12 @@
             v-model="selectedUser"
             :teleported="false"
             :popper-append-to-body="false"
-            theme="white"
           >
             <tui-option
               v-for="user in remoteEnteredUserList"
               :key="user.userId"
               :value="user.userId"
               :label="user.nameCard || user.userName"
-              theme="white"
             />
           </tui-select>
         </div>
@@ -45,7 +43,6 @@
             {{ t('Dismiss') }}
           </tui-button>
           <tui-button
-            v-if="isShowLeaveRoomDialog"
             class="button"
             size="default"
             @click="handleEndLeaveClick"
@@ -91,10 +88,9 @@ import { roomService } from '../../../services';
 
 const {
   t,
-  isShowLeaveRoomDialog,
   roomStore,
   roomEngine,
-  stopMeeting,
+  dismissClass,
   cancel,
   selectedUser,
   DialogType,
@@ -105,13 +101,11 @@ const {
   currentDialogType,
   visible,
   resetState,
-  isMasterWithOneRemoteUser,
-  isMasterWithRemoteUser,
   remoteEnteredUserList,
 } = useEndControl();
 
 function handleEndBtnClick() {
-  stopMeeting();
+  dismissClass();
 }
 function handleEndLeaveClick() {
   leaveRoom();
@@ -166,14 +160,14 @@ async function transferAndLeave() {
   .end-button {
     padding: 9px 20px;
     font-size: 14px;
-    color: var(--red-color-2);
-    border: 1.5px solid var(--red-color-2);
     border-radius: 20px;
+    color: var(--text-color-error);
+    border: 1.5px solid var(--text-color-error);
 
     &:hover {
-      color: var(--font-color-7);
-      background: var(--red-color-2);
-      border: 1px solid var(--red-color-2);
+      color: var(--uikit-color-white-1);
+      background: var(--text-color-error);
+      border: 1.5px solid var(--text-color-error);
     }
   }
 }

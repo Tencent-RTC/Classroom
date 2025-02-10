@@ -11,7 +11,6 @@
             <span class="form-label">{{ t('Room Name') }}</span>
             <TuiInput
               v-model="form.roomName"
-              theme="white"
               class="form-value"
               :placeholder="t('please enter the room name')"
               maxlength=""
@@ -135,7 +134,7 @@
           <div class="form-item">
             <span class="form-label">{{ t('Encryption') }}</span>
             <div class="form-value flex-end">
-              <TuiSwitch theme="white" v-model="isShowPasswordInput" />
+              <TuiSwitch v-model="isShowPasswordInput" />
             </div>
           </div>
           <div v-if="isShowPasswordInput" class="form-item">
@@ -143,7 +142,6 @@
             <TuiInput
               :model-value="form.password"
               @input="form.password = $event"
-              theme="white"
               class="form-value"
               :placeholder="t('Enter 6-digit password')"
               maxlength="6"
@@ -156,19 +154,13 @@
           <div class="form-item">
             <span class="form-label">{{ t('Disable all audios') }}</span>
             <div class="form-value flex-end">
-              <TuiSwitch
-                theme="white"
-                v-model="form.isMicrophoneDisableForAllUser"
-              />
+              <TuiSwitch v-model="form.isMicrophoneDisableForAllUser" />
             </div>
           </div>
           <div class="form-item">
             <span class="form-label">{{ t('Disable all videos') }}</span>
             <div class="form-value flex-end">
-              <TuiSwitch
-                theme="white"
-                v-model="form.isCameraDisableForAllUser"
-              />
+              <TuiSwitch v-model="form.isCameraDisableForAllUser" />
             </div>
           </div>
         </div>
@@ -274,7 +266,7 @@ const isShowPasswordInput = ref(false);
 const needCheck = ref(false);
 const isEditMode = computed(() => !!props.conferenceInfo);
 const roomId = ref('');
-let contacts: any = [];
+const contacts = ref([]);
 const { date: startDate, laterTime: startTime } = getDateAndTime(new Date());
 const defaultFormData = ref({
   roomName: t('sb temporary room', {
@@ -312,7 +304,8 @@ watch(
       const { date, laterTime } = getDateAndTime(new Date());
       form.value.startDate = date;
       form.value.startTime = laterTime;
-      contacts = await roomService.scheduleConferenceManager.fetchFriendList();
+      contacts.value =
+        await roomService.scheduleConferenceManager.fetchFriendList();
       isEditMode.value &&
         (form.value = Object.assign({}, deepClone(editParams.value)));
     }
@@ -513,6 +506,7 @@ watch(
 );
 
 const roomTypeList = [
+  { label: 'Free Speech Room', value: 'FreeToSpeak' },
   { label: 'On-stage Speaking Room', value: 'SpeakAfterTakingSeat' },
 ];
 
@@ -521,7 +515,7 @@ const selectScheduleAttends = () => {
 };
 const searchScheduleAttend = (v: string) => {
   if (!v) return [];
-  return contacts.filter(
+  return contacts.value.filter(
     (user: any) => user?.profile.nick.includes(v) || user?.userID.includes(v)
   );
 };
@@ -550,12 +544,15 @@ const contactsConfirm = (contacts: TUIUserInfo[]) => {
   form.value.scheduleAttendees = contacts;
 };
 
+let scheduleConferenceInProgress = false;
 const scheduleConference = async () => {
+  if (scheduleConferenceInProgress) return;
   if (!timeCheck()) return;
   if (!roomNameCheck()) return;
   if (!roomPasswordCheck()) return;
-  roomId.value = String(Math.ceil(Math.random() * 1000000));
+  scheduleConferenceInProgress = true;
   try {
+    roomId.value = await roomService.scheduleConferenceManager.generateRoomId();
     await roomService.scheduleConferenceManager.scheduleConference({
       ...scheduleParams.value,
       roomId: roomId.value,
@@ -578,6 +575,7 @@ const scheduleConference = async () => {
       message: err.message,
     });
   }
+  scheduleConferenceInProgress = false;
 };
 const compareArrays = (oldArray: any[], newArray: any[], key: string) => {
   const added: any[] = [];
@@ -658,8 +656,8 @@ const updateConferenceInfo = async () => {
     flex-direction: column;
     gap: 10px;
     padding: 16px 5%;
-    background-color: #fff;
     border-radius: 8px;
+    background-color: var(--bg-color-operate);
   }
 
   .form-item {
@@ -672,7 +670,7 @@ const updateConferenceInfo = async () => {
       min-width: 100px;
       font-size: 14px;
       font-weight: 400;
-      color: #4f586b;
+      color: var(--text-color-primary);
     }
 
     .form-value {
@@ -684,7 +682,7 @@ const updateConferenceInfo = async () => {
       font-size: 14px;
       font-weight: 400;
       line-height: 42px;
-      color: #0f1014;
+      color: var(--text-color-primary);
 
       .search-user {
         height: 42px;
@@ -703,7 +701,7 @@ const updateConferenceInfo = async () => {
         }
 
         &-item:hover {
-          color: #409eff;
+          color: var(--uikit-color-theme-5);
         }
       }
 
@@ -724,7 +722,7 @@ const updateConferenceInfo = async () => {
       }
 
       .select-attendees:hover {
-        color: var(--active-color-1);
+        color: var(--text-color-link);
       }
 
       .select-search-result-item {
@@ -755,7 +753,7 @@ const updateConferenceInfo = async () => {
           padding: 2px 8px;
           overflow: hidden;
           line-height: normal;
-          background-color: #e3f0fd;
+          background-color: var(--uikit-color-white-2);
           border-radius: 4px;
 
           &-container {
@@ -782,7 +780,7 @@ const updateConferenceInfo = async () => {
 
           &-remove {
             margin-left: auto;
-            color: #b3acac;
+            color: var(--uikit-color-gray-7);
             cursor: pointer;
           }
         }
@@ -834,7 +832,7 @@ const updateConferenceInfo = async () => {
   gap: 20px;
 
   .invite-member-title {
-    color: #4f586b;
+    color: var(--text-color-secondary);
   }
 
   .invite-member-item {
@@ -842,9 +840,9 @@ const updateConferenceInfo = async () => {
     justify-content: space-between;
     padding: 10px 16px;
     margin-top: 8px;
-    color: #0f1014;
-    background: #f9fafc;
-    border: 1px solid #e4e8ee;
+    color: var(--text-color-primary);
+    background: var(--uikit-color-white-2);
+    border: 1px solid var(--uikit-color-white-2);
     border-radius: 8px;
 
     .copy {
