@@ -4,15 +4,9 @@ import TUIRoomEngine, { TUIRoomEvents } from '@tencentcloud/tuiroom-engine-js';
 import { UserInfo } from '../../stores/room';
 import defaultAvatar from '../../assets/imgs/avatar.png';
 
-const THEME = {
-  LIGHT: 'LIGHT',
-  DARK: 'DARK',
-};
-
 export class ChatManager {
   static instance?: ChatManager;
   private service: IRoomService;
-  private isRoomType = false;
 
   constructor(service: IRoomService) {
     this.service = service;
@@ -48,21 +42,15 @@ export class ChatManager {
     );
   }
 
-  public setChatType(type: boolean) {
-    this.isRoomType = type;
-  }
-
   public async onNotifyEvent(eventName: string, subKey: string, options?: any) {
-    if (!this.isRoomType) return;
+    if (options.groupID !== this.service.basicStore.roomId) return;
     if (eventName === TUIConstants.TUIChat.EVENT.CHAT_STATE_CHANGED) {
       if (subKey === TUIConstants.TUIChat.EVENT_SUB_KEY.CHAT_OPENED) {
-        TUICore.callService({
-          serviceName: TUIConstants.TUIChat.SERVICE.NAME,
-          method: TUIConstants.TUIChat.SERVICE.METHOD.SET_CHAT_TYPE,
-          params: {
-            chatType: TUIConstants.TUIChat.TYPE.ROOM,
-          },
-        });
+        TUICore.notifyEvent(
+          TUIConstants.TUIChat.EVENT.CHAT_TYPE_CHANGED,
+          TUIConstants.TUIChat.EVENT_SUB_KEY.CHANGE_SUCCESS,
+          { chatType: TUIConstants.TUIChat.TYPE.ROOM }
+        );
         const result = Object.fromEntries(
           this.service.roomStore.userList.map(item => [
             item.userId,
@@ -91,11 +79,10 @@ export class ChatManager {
   }
 
   private onThemeChanged(theme: string) {
-    const currentTheme = theme === 'black' ? THEME.DARK : THEME.LIGHT;
     TUICore.notifyEvent(
       TUIConstants.TUITheme.EVENT.THEME_CHANGED,
       TUIConstants.TUITheme.EVENT_SUB_KEY.CHANGE_SUCCESS,
-      { theme: currentTheme }
+      { theme }
     );
   }
 

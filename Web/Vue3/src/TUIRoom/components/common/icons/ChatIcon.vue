@@ -16,7 +16,7 @@
       fill-rule="evenodd"
       clip-rule="evenodd"
       d="M12.5002 13.85H7.50022V12.15H12.5002V13.85Z"
-      style="fill: var(--active-color-2); fill-opacity: 1"
+      style="fill: var(--uikit-color-theme-5); fill-opacity: 1"
     />
     <path
       fill-rule="evenodd"

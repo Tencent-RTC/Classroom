@@ -221,3 +221,111 @@ export function getNanoId(size = 21) {
   }
   return id;
 }
+
+export function findLastIndex<T>(
+  array: T[],
+  predicate: (value: T, index: number, obj: T[]) => boolean,
+  thisArg?: any
+): number {
+  const len = array.length >>> 0;
+
+  let k = len - 1;
+  while (k >= 0) {
+    const kValue = array[k];
+    if (predicate.call(thisArg, kValue, k, array)) {
+      return k;
+    }
+    k = k - 1;
+  }
+  return -1;
+}
+
+export function formatTimestampToTime(
+  timestamp: number,
+  format = 'MM-DD HH:mm'
+): string {
+  const date = new Date(timestamp);
+  const padStart = (value: number, length = 2) =>
+    value.toString().padStart(length, '0');
+
+  const replacements: { [key: string]: string } = {
+    YYYY: date.getFullYear().toString(),
+    YY: (date.getFullYear() % 100).toString().padStart(2, '0'),
+    MM: padStart(date.getMonth() + 1),
+    DD: padStart(date.getDate()),
+    HH: padStart(date.getHours()),
+    hh: padStart(date.getHours() % 12),
+    mm: padStart(date.getMinutes()),
+    ss: padStart(date.getSeconds()),
+    A: date.getHours() >= 12 ? 'PM' : 'AM',
+  };
+
+  // console.log(formatTimestampToTime(Date.now())); // "10-24 16:20"
+  // console.log(formatTimestampToTime(Date.now(), 'YYYY-MM-DD HH:mm:ss')); // "2024-10-24 16:20:30"
+  // console.log(formatTimestampToTime(Date.now(), 'MM-DD hh:mm A')); // "10-24 04:20 PM"
+  return format.replace(
+    /YYYY|YY|MM|DD|HH|hh|mm|ss|A/g,
+    match => replacements[match]
+  );
+}
+
+export type Comparator<T> = (a: T, b: T) => -1 | 0 | 1;
+/**
+ * Creates a new combined {@link Comparator<T>} which sorts items by the given comparators.
+ * The comparators are applied in the order they are given (left -> right).
+ *
+ * @param comparators the comparators to use for sorting.
+ * @returns a combined {@link Comparator<T>}.
+ */
+export const combineComparators = <T>(
+  ...comparators: Comparator<T>[]
+): Comparator<T> => {
+  return (a, b) => {
+    for (const comparator of comparators) {
+      const result = comparator(a, b);
+      if (result !== 0) return result;
+    }
+    return 0;
+  };
+};
+
+export const createComparator = <T>(
+  compareRules: (data1: T, data2: T) => boolean
+) => {
+  return (a: T, b: T) => {
+    if (compareRules(a, b) && compareRules(b, a)) {
+      return 0;
+    }
+    if (compareRules(a, b)) {
+      return -1;
+    }
+    if (compareRules(b, a)) {
+      return 1;
+    }
+    return 0;
+  };
+};
+
+export function arrayIsEqual<T>(arr1: T[], arr2: T[]): boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (
+      typeof arr1[i] === 'object' &&
+      typeof arr2[i] === 'object' &&
+      arr1[i] !== null &&
+      arr2[i] !== null
+    ) {
+      if (!arrayIsEqual(arr1[i] as any, arr2[i] as any)) {
+        return false;
+      }
+    } else {
+      if (arr1[i] !== arr2[i]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}

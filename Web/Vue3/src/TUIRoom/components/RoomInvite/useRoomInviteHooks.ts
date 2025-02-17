@@ -9,6 +9,7 @@ import { isElectron } from '../../utils/environment';
 import InviteIcon from '../common/icons/InviteIcon.vue';
 import ShareIcon from '../common/icons/ShareIcon.vue';
 import { roomService, TUIUserInfo } from '../../services';
+import { ClassType } from '../../utils/common';
 import { MESSAGE_DURATION } from '../../constants/message';
 export default function useRoomInvite() {
   const { t } = useI18n();
@@ -16,8 +17,7 @@ export default function useRoomInvite() {
   const basicStore = useBasicStore();
   const roomLinkConfig = roomService.getComponentConfig('RoomLink');
   const roomStore = useRoomStore();
-  const { remoteEnteredUserList, roomName, isSeatEnabled, password } =
-    storeToRefs(roomStore);
+  const { remoteEnteredUserList, roomName, isSeatEnabled, password, currentClassType } = storeToRefs(roomStore);
   const {
     roomId,
     shareLink,
@@ -33,7 +33,18 @@ export default function useRoomInvite() {
   const showContacts = ref(false);
 
   const isShowRoomShareForm = ref(false);
-
+  const roomType = computed(() => {
+    switch (currentClassType.value) {
+      case ClassType.OneToOneClass:
+        return t('1V1 class');
+      case ClassType.SmallClass:
+        return t('Small class');
+      case ClassType.LargeClass:
+        return t('Large class');
+      default:
+        return '';
+    }
+  });
   const inviteLink = computed(() => {
     if (shareLink.value) {
       const urlConcatenation = shareLink.value.indexOf('?') !== -1 ? '&' : '?';
@@ -102,7 +113,7 @@ export default function useRoomInvite() {
     },
     {
       title: 'Room Type',
-      content: `${t(getSeatModeDisplay(isSeatEnabled.value))}`,
+      content: roomType.value,
       isShowCopyIcon: false,
       isVisible: true,
     },
@@ -143,7 +154,7 @@ export default function useRoomInvite() {
   function copyRoomIdAndRoomLink() {
     const invitationList = [
       roomName.value,
-      `${t('Room Type')}: ${t(getSeatModeDisplay(isSeatEnabled.value))}`,
+      `${t('Room Type')}: ${t(getSeatModeDisplay(!!isSeatEnabled.value))}`,
       `${t('Room ID')}: ${roomId.value}`,
     ];
     if (isShowPassword.value) {

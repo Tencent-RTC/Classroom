@@ -1,10 +1,10 @@
 <template>
   <div class="member-control-container">
     <tui-button
+      v-if="singleControl"
       class="button"
       size="default"
       @click="singleControl.func(props.userInfo)"
-      v-if="!isCanOperateMySelf"
     >
       {{ singleControl?.title }}
     </tui-button>
@@ -21,7 +21,7 @@
         v-show="showMoreControl"
         id="operate-list"
         ref="operateListRef"
-        :class="['user-operate-list', 'tui-theme-white', dropdownClass]"
+        :class="['user-operate-list', dropdownClass]"
       >
         <div
           v-for="item in moreControlList"
@@ -105,9 +105,14 @@ const {
 
 const { isCanOperateMySelf } = useMemberItemHooks(props.userInfo);
 
-const singleControl = computed(() => controlList.value[0]);
+const singleControl = computed(() => {
+  return isCanOperateMySelf.value ? null : controlList.value[0];
+});
+
 const moreControlList = computed(() => {
-  return isCanOperateMySelf ? controlList.value : controlList.value.slice(1);
+  return isCanOperateMySelf.value
+    ? controlList.value
+    : controlList.value.slice(1);
 });
 const dropdownClass = ref('down');
 const moreBtnRef = ref();
@@ -163,17 +168,6 @@ async function handleDropDownPosition() {
 </script>
 
 <style lang="scss" scoped>
-.tui-theme-black .user-operate-list {
-  --operation-font-color: var(--font-color-1);
-  --operation-box-shadow: 0px 3px 8px rgba(34, 38, 46, 0.3),
-    0px 6px 40px rgba(34, 38, 46, 0.3);
-}
-
-.tui-theme-white .user-operate-list {
-  --operation-font-color: #6b758a;
-  --operation-box-shadow: 0px 3px 8px #e9f0fb, 0px 6px 40px rgba(0, 0, 0, 0.1);
-}
-
 .member-control-container {
   display: flex;
   flex-direction: row;
@@ -200,9 +194,11 @@ async function handleDropDownPosition() {
       z-index: 1;
       min-width: 160px;
       padding: 20px;
-      background: var(--background-color-1);
       border-radius: 8px;
-      box-shadow: var(--operation-box-shadow);
+      background-color: var(--dropdown-color-default);
+      box-shadow:
+        0px 3px 8px var(--uikit-color-black-8),
+        0px 6px 40px var(--uikit-color-black-8);
 
       &::before {
         position: absolute;
@@ -210,8 +206,8 @@ async function handleDropDownPosition() {
         content: '';
         border-top: 10px solid transparent;
         border-right: 10px solid transparent;
-        border-bottom: 10px solid var(--background-color-1);
         border-left: 10px solid transparent;
+        border-bottom: 10px solid var(--dropdown-color-default);
       }
 
       &::after {
@@ -226,8 +222,8 @@ async function handleDropDownPosition() {
         display: flex;
         align-items: center;
         height: 20px;
-        color: var(--operation-font-color);
         cursor: pointer;
+        color: var(--text-color-secondary);
 
         .operate-text {
           margin-left: 10px;

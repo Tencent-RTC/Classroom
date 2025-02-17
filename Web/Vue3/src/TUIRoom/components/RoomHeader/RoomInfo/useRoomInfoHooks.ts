@@ -8,20 +8,28 @@ import { clipBoard } from '../../../utils/utils';
 import useRoomInviteControl from '../../RoomInvite/useRoomInviteHooks';
 import { isWeChat } from '../../../utils/environment';
 import { roomService } from '../../../services';
+import { ClassType } from '../../../utils/common';
 
 export default function useRoomInfo() {
   const { inviteLink } = useRoomInviteControl();
   const basicStore = useBasicStore();
   const roomStore = useRoomStore();
   const { roomId, isRoomLinkVisible } = storeToRefs(basicStore);
-  const { masterUserId, roomName, password } = storeToRefs(roomStore);
+  const { masterUserId, roomName, password, currentClassType } = storeToRefs(roomStore);
   const { t } = useI18n();
   const isShowRoomInfo = ref(false);
-  const roomType = computed(() =>
-    roomStore.isFreeSpeakMode
-      ? t('Free Speech Room')
-      : t('On-stage Speaking Room')
-  );
+  const roomType = computed(() => {
+    switch (currentClassType.value) {
+      case ClassType.OneToOneClass:
+        return t('1V1 class');
+      case ClassType.SmallClass:
+        return t('Small class');
+      case ClassType.LargeClass:
+        return t('Large class');
+      default:
+        return '';
+    }
+  });
   const arrowDirection = ref(false);
   const roomLinkConfig = roomService.getComponentConfig('RoomLink');
 

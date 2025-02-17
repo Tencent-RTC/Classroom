@@ -92,6 +92,7 @@ import TuiButton from '../../common/base/Button.vue';
 import eventBus from '../../../hooks/useMitt';
 import { isScreenShareSupported } from '../../../utils/mediaAbility';
 import { roomService } from '../../../services';
+import { emit } from 'process';
 
 const roomEngine = useGetRoomEngine();
 
@@ -104,7 +105,7 @@ const basicStore = useBasicStore();
 const {
   isAnchor,
   isAudience,
-  hasOtherScreenShare,
+  remoteScreenStream,
   isGeneralUser,
   isScreenShareDisableForAllUser,
 } = storeToRefs(roomStore);
@@ -145,7 +146,7 @@ async function toggleScreenShare() {
     return;
   }
 
-  if (hasOtherScreenShare.value) {
+  if (remoteScreenStream.value) {
     TUIMessage({
       type: 'warning',
       message: t('Another user is sharing the screen.'),
@@ -178,6 +179,7 @@ async function toggleScreenShare() {
     return;
   }
   isShowFraudDialog.value = true;
+  roomService.trackingManager.sendMessage('experience-screen-share');
 }
 
 function cancelStop() {
@@ -218,7 +220,7 @@ async function startScreenShare() {
           );
         } else {
           // User rejects/cancels screen sharing
-          eventBus.emit('screenShareCanceled');
+          eventBus.emit('screenShareCancelled');
           message = t('User canceled screen sharing');
         }
         break;
@@ -252,6 +254,7 @@ async function stopScreenShare() {
 /** Receive a stop screen sharing event (the user clicks the "End Sharing" button that comes with the browser or is kicked off the stage by the host in speaking mode)*/
 function screenCaptureStopped() {
   isSharing.value = false;
+  eventBus.emit('screenShareStopped');
 }
 
 eventBus.on('ScreenShare:stopScreenShare', stopScreenShare);
@@ -287,11 +290,11 @@ onUnmounted(() => {
   width: 131px;
   height: 48px;
   font-size: 14px;
-  color: var(--color-font);
   cursor: pointer;
-  background: var(--stop-share-region-bg-color);
   border-radius: 4px;
   transform: translateX(-50%);
+  color: var(--text-color-primary);
+  background-color: var(--bg-color-operate);
 }
 
 .stop-share-icon {

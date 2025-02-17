@@ -124,13 +124,13 @@ async function toggleApplySpeech() {
   }
 }
 
-const inviteDialogInfo = {
+const inviteDialogInfo = computed(() => ({
   content: t('You can turn on the microphone and camera once you are on stage'),
   confirmButtonText: t('Agree to the stage'),
   cancelButtonText: t('Reject'),
   handleConfirm: () => handleInvite(true),
   handleCancel: () => handleInvite(false),
-};
+}));
 
 const leaveSeatDialogInfo = computed(() => ({
   content:
@@ -147,7 +147,7 @@ const leaveSeatDialogInfo = computed(() => ({
 
 const currentDialogInfo = computed(() =>
   currentDialogType.value === 'inviteDialog'
-    ? inviteDialogInfo
+    ? inviteDialogInfo.value
     : leaveSeatDialogInfo.value
 );
 
@@ -237,7 +237,6 @@ async function leaveSeat() {
   if (roomStore.isMicrophoneDisableForAllUser && isGeneralUser.value) {
     roomStore.setCanControlSelfAudio(false);
   }
-  basicStore.setIsOpenMic(false);
 }
 
 function hideApplyAttention() {
@@ -342,9 +341,9 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: var(--active-color-1);
     border-radius: 8px;
-    box-shadow: 0 4px 16px 0 rgba(47, 48, 164, 0.1);
+    background-color: var(--text-color-link);
+    box-shadow: 0 4px 16px 0 var(--uikit-color-black-8);
 
     &::after {
       position: absolute;
@@ -353,8 +352,8 @@ onBeforeUnmount(() => {
       display: block;
       content: '';
       border: 5px solid transparent;
-      border-top-color: var(--active-color-1);
       transform: translateX(-50%);
+      border-top-color: var(--text-color-link);
     }
   }
 
@@ -367,7 +366,7 @@ onBeforeUnmount(() => {
       font-size: 14px;
       font-weight: 500;
       line-height: 20px;
-      color: #fff;
+      color: var(--uikit-color-white-1);
       white-space: nowrap;
     }
 
@@ -377,7 +376,7 @@ onBeforeUnmount(() => {
 
     .close {
       padding-left: 12px;
-      color: #fff;
+      color: var(--uikit-color-white-1);
       cursor: pointer;
     }
   }
@@ -392,11 +391,11 @@ onBeforeUnmount(() => {
   padding: 14px;
   font-size: 16px;
   font-weight: 500;
-  color: var(--active-color-1);
+  color: var(--text-color-link);
 }
 
 .cancel {
-  color: var(--font-color-4);
+  color: var(--text-color-secondary);
 }
 
 .cancel-button {

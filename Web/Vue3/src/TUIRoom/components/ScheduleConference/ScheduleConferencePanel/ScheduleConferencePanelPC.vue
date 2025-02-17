@@ -7,37 +7,14 @@
     >
       <div class="schedule-conference-form">
         <div class="form-item">
-          <span class="form-label">{{ t('Room Name') }}</span>
+          <span class="form-label">{{ t('Room name') }}</span>
           <TuiInput
             :model-value="form.roomName"
             @input="form.roomName = $event"
-            theme="white"
             class="form-value"
             :placeholder="t('please enter the room name')"
             maxlength=""
           />
-        </div>
-        <div v-if="!isEditMode" class="form-item">
-          <span class="form-label">{{ t('Room type') }}</span>
-          <div class="form-value">
-            <tui-select
-              v-model="form.roomMode"
-              theme="white"
-              class="select"
-              :teleported="false"
-              :popper-append-to-body="false"
-              :custom-select-content-style="{ 'font-weight': 400 }"
-            >
-              <tui-option
-                v-for="item in roomTypeList"
-                :key="item.value"
-                theme="white"
-                :value="item.value"
-                :label="t(item.label)"
-                :custom-option-content-style="{ 'font-weight': 400 }"
-              />
-            </tui-select>
-          </div>
         </div>
         <div class="form-item">
           <span class="form-label">{{ t('Starting time') }}</span>
@@ -73,6 +50,13 @@
               @input="form.timezone = $event"
             />
           </div>
+        </div>
+        <div class="class-type">
+          <span class="form-label">{{ t('Room type') }}</span>
+          <class-type-panel
+            :model-value="selectedClassType"
+            @click="handleClassTypeChanged"
+          />
         </div>
         <div class="form-item column">
           <span class="form-label">{{ t('Attendees') }}</span>
@@ -148,7 +132,6 @@
               v-if="passwordChecked"
               :model-value="form.password"
               @input="form.password = $event"
-              theme="white"
               class="form-value"
               style="margin-top: 8px"
               :placeholder="t('Enter 6-digit password')"
@@ -244,6 +227,7 @@ import TuiShareLink from '../ShareLink.vue';
 import Contacts from '../Contacts.vue';
 import ScheduleAttendees from '../../common/icons/ScheduleAttendees.vue';
 import PanelContainer from '../PanelContainer.vue';
+import ClassTypePanel from '../ClassTypePanel.vue';
 import CloseIcon from '../../common/icons/CloseIcon.vue';
 import HideContentIcon from '../../common/icons/HideContentIcon.vue';
 import ShowContentIcon from '../../common/icons/ShowContentIcon.vue';
@@ -256,7 +240,7 @@ import {
   TUIConferenceStatus,
 } from '@tencentcloud/tuiroom-engine-js';
 import { deepClone, calculateByteLength } from '../../../utils/utils';
-import { invalidDigitalPasswordRegex } from '../../../utils/common';
+import { invalidDigitalPasswordRegex, ClassType } from '../../../utils/common';
 import {
   getDateAndTime,
   convertToTimestamp,
@@ -281,13 +265,12 @@ const isShowPassword = ref(false);
 const passwordChecked = ref(false);
 const isEditMode = computed(() => !!props.conferenceInfo);
 const roomId = ref('');
-let contacts: any = [];
+const contacts = ref([]);
 const { date: startDate, laterTime: startTime } = getDateAndTime(new Date());
 const defaultFormData = ref({
   roomName: t('sb temporary room', {
     name: props.userName || roomService.basicStore.userId,
   }),
-  roomMode: 'SpeakAfterTakingSeat',
   startDate,
   startTime,
   duration: 1800,
@@ -302,6 +285,8 @@ const defaultFormData = ref({
 const form = ref(deepClone(defaultFormData.value));
 
 const inputType = computed(() => (isShowPassword.value ? 'text' : 'password'));
+
+const selectedClassType = ref(ClassType.SmallClass);
 
 const toggleShowPassword = () => {
   isShowPassword.value = !isShowPassword.value;
@@ -322,7 +307,8 @@ watch(
       });
       form.value.startDate = date;
       form.value.startTime = laterTime;
-      contacts = await roomService.scheduleConferenceManager.fetchFriendList();
+      contacts.value =
+        await roomService.scheduleConferenceManager.fetchFriendList();
       isEditMode.value &&
         (form.value = Object.assign({}, deepClone(editParams.value)));
     }
@@ -357,7 +343,6 @@ const editParams = computed(() => {
   const { date, time } = getDateAndTime(new Date(scheduleStartTime * 1000));
   const {
     roomName,
-    isSeatEnabled,
     isMicrophoneDisableForAllUser,
     isScreenShareDisableForAllUser,
     isCameraDisableForAllUser,
@@ -365,7 +350,6 @@ const editParams = computed(() => {
   } = basicRoomInfo;
   return {
     roomName,
-    roomMode: isSeatEnabled ? 'SpeakAfterTakingSeat' : 'FreeToSpeak',
     startDate: date,
     startTime: time,
     duration: scheduleEndTime - scheduleStartTime,
@@ -390,11 +374,8 @@ const scheduleParams = computed(() => {
     scheduleEndTime: scheduleEndTime / 1000,
     scheduleAttendees,
     roomName: form.value.roomName,
-    isSeatEnabled: form.value.roomMode !== 'FreeToSpeak',
-    seatMode:
-      form.value.roomMode === 'SpeakAfterTakingSeat'
-        ? TUISeatMode.kApplyToTake
-        : undefined,
+    isSeatEnabled: selectedClassType.value === ClassType.LargeClass,
+    seatMode: selectedClassType.value === ClassType.LargeClass ? TUISeatMode.kApplyToTake : TUISeatMode.kFreeToTake,
     isMicrophoneDisableForAllUser: form.value.isMicrophoneDisableForAllUser,
     isScreenShareDisableForAllUser: form.value.isScreenShareDisableForAllUser,
     isCameraDisableForAllUser: form.value.isCameraDisableForAllUser,
@@ -519,16 +500,12 @@ watch(
   }
 );
 
-const roomTypeList = [
-  { label: 'On-stage Speaking Room', value: 'SpeakAfterTakingSeat' },
-];
-
 const selectScheduleAttends = () => {
   contactsVisible.value = true;
 };
 const searchScheduleAttend = (v: string) => {
   if (!v) return [];
-  return contacts.filter(
+  return contacts.value.filter(
     (user: any) => user?.profile.nick.includes(v) || user?.userID.includes(v)
   );
 };
@@ -557,12 +534,16 @@ const contactsConfirm = (contacts: TUIUserInfo[]) => {
   form.value.scheduleAttendees = contacts;
 };
 
+let scheduleConferenceInProgress = false;
 const scheduleConference = async () => {
+  if (scheduleConferenceInProgress) return;
   if (!timeCheck()) return;
   if (!roomNameCheck()) return;
   if (!roomPasswordCheck()) return;
-  roomId.value = String(Math.ceil(Math.random() * 1000000));
+  scheduleConferenceInProgress = true;
+
   try {
+    roomId.value = await roomService.scheduleConferenceManager.generateRoomId();
     await roomService.scheduleConferenceManager.scheduleConference({
       ...scheduleParams.value,
       roomId: roomId.value,
@@ -585,6 +566,7 @@ const scheduleConference = async () => {
       message: err.message,
     });
   }
+  scheduleConferenceInProgress = false;
 };
 const compareArrays = (oldArray: any[], newArray: any[], key: string) => {
   const added: any[] = [];
@@ -653,6 +635,10 @@ const updateConferenceInfo = async () => {
   }
 };
 
+function handleClassTypeChanged(classType: ClassType) {
+  selectedClassType.value = classType;
+}
+
 const cancel = () => {
   updateDialogVisible(false);
 };
@@ -664,17 +650,17 @@ const cancel = () => {
   flex-direction: column;
   gap: 10px;
 
-  .form-item {
+  .class-type {
     display: flex;
-    align-items: center;
 
     .form-label {
       display: inline-block;
+      margin-top: 10px;
       width: 100px;
       min-width: 100px;
       font-size: 14px;
       font-weight: 400;
-      color: #4f586b;
+      color: var(--text-color-secondary);
     }
 
     .form-value {
@@ -685,7 +671,32 @@ const cancel = () => {
       font-size: 14px;
       font-weight: 400;
       line-height: 42px;
-      color: #0f1014;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .form-item {
+    display: flex;
+    align-items: center;
+
+    .form-label {
+      display: inline-block;
+      width: 100px;
+      min-width: 100px;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-color-secondary);
+    }
+
+    .form-value {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      height: 42px;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 42px;
+      color: var(--text-color-secondary);
 
       .search-user {
         height: 42px;
@@ -697,14 +708,15 @@ const cancel = () => {
 
       .checkbox-group {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
 
         &-item {
           max-width: 145px;
+          margin-right: 12px;
         }
 
         &-item:hover {
-          color: #409eff;
+          color: var(--uikit-color-theme-5);
         }
       }
 
@@ -725,7 +737,7 @@ const cancel = () => {
       }
 
       .select-attendees:hover {
-        color: var(--active-color-1);
+        color: var(--text-color-link);
       }
 
       .select-search-result-item {
@@ -755,7 +767,7 @@ const cancel = () => {
           padding: 2px 8px;
           overflow: hidden;
           line-height: normal;
-          background-color: #e3f0fd;
+          background-color: var(--uikit-color-white-2);
           border-radius: 4px;
 
           &-avatar {
@@ -777,7 +789,7 @@ const cancel = () => {
 
           &-remove {
             margin-left: auto;
-            color: #b3acac;
+            color: var(--uikit-color-gray-7);
             cursor: pointer;
           }
         }
@@ -797,7 +809,7 @@ const cancel = () => {
     align-items: flex-start;
 
     .form-label {
-      height: 42px;
+      height: 32px;
       line-height: 42px;
     }
 
@@ -813,7 +825,7 @@ const cancel = () => {
       width: 100%;
 
       .form-title {
-        color: #0f1014;
+        color: var(--text-color-secondary);
       }
     }
   }
@@ -838,7 +850,7 @@ const cancel = () => {
   gap: 20px;
 
   .invite-member-title {
-    color: #4f586b;
+    color: var(--text-color-secondary);
   }
 
   .invite-member-item {
@@ -846,9 +858,9 @@ const cancel = () => {
     justify-content: space-between;
     padding: 10px 16px;
     margin-top: 8px;
-    color: #0f1014;
-    background: #f9fafc;
-    border: 1px solid #e4e8ee;
+    color: var(--text-color-primary);
+    background: var(--uikit-color-white-2);
+    border: 1px solid var(--uikit-color-white-2);
     border-radius: 8px;
 
     .copy {

@@ -25,7 +25,7 @@
       width="8.3"
       height="8.3"
       rx="4.15"
-      style="stroke: var(--active-color-2); stroke-opacity: 1"
+      style="stroke: var(--uikit-color-theme-5); stroke-opacity: 1"
       stroke-width="1.7"
     />
     <rect
@@ -43,7 +43,7 @@
       width="3.5"
       height="3.5"
       rx="1.75"
-      style="fill: var(--active-color-2); fill-opacity: 1"
+      style="fill: var(--uikit-color-theme-5); fill-opacity: 1"
     />
     <rect
       x="2.35"

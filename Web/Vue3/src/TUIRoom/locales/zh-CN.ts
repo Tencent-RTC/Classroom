@@ -31,7 +31,7 @@ export default {
   'Turn on the microphone': '开启麦克风',
   'Turn on the speaker': '开启扬声器',
   'Turn on the video': '开启视频',
-  'Free Speech Room': '自由发言房间',
+  'Free Speech Room': '小班课',
   'On-stage Speaking Room': '小班课',
   'Join Room': '进入课堂',
   'Enter room ID': '输入课堂号',
@@ -59,6 +59,8 @@ export default {
     '停止后所有人将无法继续观看屏幕内容',
   'You currently do not have sharing permission, please raise your hand to apply for sharing permission first':
     '您当前没有共享权限，请先举手申请上台获取共享权限',
+  'You currently do not have whiteboard permission, please raise your hand to apply for whiteboard permission first':
+    '您当前没有白板权限，请先举手申请上台获取白板权限',
   Host: '老师',
   Me: '我',
   me: '我',
@@ -400,6 +402,7 @@ export default {
   Schedule: '预订课堂',
   'Modify Room': '修改课堂',
   'Room Name': '课堂名称',
+  'Room name': '课堂名称',
   'please enter the room name': '请输入课堂名称',
   'Room type': '课堂类型',
   'Starting time': '开始时间',
@@ -518,4 +521,15 @@ export default {
   'Sure you want to reset the beauty effect?': '确定要重置美颜效果吗?',
   'All beauty parameters will revert to default after reset':
     '重置后所有美颜参数将恢复至默认',
+  '1V1 class': '一对一课',
+  'Small class': '互动小班课',
+  'Large class': '大班课',
+  '1V1 call, specific layout, efficient interaction.': '一对一呼叫，特定布局，高效互动。',
+  'Recommended usage scenarios: language teaching, online recruitment, remote business development':
+    '推荐使用场景：语言教学、在线招聘、远程展业',
+  'Strong interaction, low latency, support for multiple people on stage at the same time.': '强互动、低延时、支持多人同时上台。',
+  'Recommended usage scenarios: small class teaching, conference discussion, online consultation':
+    '推荐使用场景：小班教学、会议研讨、在线会诊',
+  'Many people interacted on stage, and thousands of people watched online.': '多人上台互动，千人同时观看。',
+  'Recommended usage scenarios: open courses, online training, financial marketing': '推荐使用场景：公开课、在线培训、金融营销',
 };

@@ -81,7 +81,7 @@ const { t } = useI18n();
 const componentConfig =
   roomService.componentManager.getComponentConfig('VirtualBackground');
 const isAllowed = computed(
-  () => roomService.roomStore.localStream.hasVideoStream
+  () => roomService.roomStore.localStream?.hasVideoStream
 );
 const appliedBackground = ref<'close' | 'blur'>('close');
 const selectedBackground = ref<'close' | 'blur'>('close');
@@ -139,8 +139,8 @@ const applyVirtualBackground = async (type: 'close' | 'blur') => {
   justify-content: center;
   min-height: 310px;
   overflow: hidden;
-  background-color: #000;
   border-radius: 8px;
+  background-color: var(--uikit-color-black-1);
 }
 
 .setting {
@@ -149,19 +149,19 @@ const applyVirtualBackground = async (type: 'close' | 'blur') => {
   align-items: center;
   padding: 1rem;
   margin-top: 10px;
-  border: 1px solid #e4e8ee;
   border-radius: 8px;
+  border: 1px solid var(--stroke-color-primary);
 
   &-item {
     display: flex;
     flex-direction: column;
     justify-content: center;
     font-size: 12px;
-    color: #4f586b;
     text-align: center;
     cursor: pointer;
     border: 1px solid transparent;
     border-radius: 8px;
+    color: var(--text-color-secondary);
 
     &-icon {
       display: flex;
@@ -170,15 +170,15 @@ const applyVirtualBackground = async (type: 'close' | 'blur') => {
       width: 54px;
       height: 54px;
       overflow: hidden;
-      background-color: #f0f3fa;
+      background-color: var(--uikit-color-white-2);
       border-radius: 8px;
     }
   }
 
   &-item.active {
-    color: #fff;
-    background-color: #1c66e5;
-    border: 1px solid #1c66e5;
+    color: var(--uikit-color-white-1);
+    background-color: var(--button-color-primary-default);
+    border: 1px solid var(--button-color-primary-default);
   }
 }
 
@@ -189,8 +189,8 @@ const applyVirtualBackground = async (type: 'close' | 'blur') => {
   z-index: 3;
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #1c66e5;
+  border: 4px solid var(--uikit-color-white-2);
+  border-top: 4px solid var(--text-color-link);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: spin 1s linear infinite;
@@ -201,7 +201,7 @@ const applyVirtualBackground = async (type: 'close' | 'blur') => {
   z-index: 2;
   width: 100%;
   height: 100%;
-  background-color: #000;
+  background-color: var(--uikit-color-black-1);
 }
 
 @keyframes spin {

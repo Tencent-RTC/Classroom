@@ -258,7 +258,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   margin: 0 auto;
-  background-color: white;
 
   .whiteboard-canvas {
     flex: 1;

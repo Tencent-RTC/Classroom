@@ -41,6 +41,7 @@
         @click="handleControlClick('inviteControl')"
       />
       <chat-control
+        v-if="roomStore.currentClassType === ClassType.SmallClass"
         class="center-container-item"
         @click="handleControlClick('chatControl')"
       />
@@ -56,7 +57,6 @@
       <AIControl
         class="center-container-item"
         @click="handleControlClick('AIControl')"
-        @show-overlay="handleShowOverlay"
       />
       <setting-control
         class="center-container-item"
@@ -72,7 +72,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits } from 'vue';
 import AudioControl from '../AudioControl.vue';
 import ScreenShareControl from '../ScreenShareControl/Index.vue';
 import FullScreenControl from '../FullScreenControl.vue';
@@ -93,13 +92,10 @@ import bus from '../../../hooks/useMitt';
 
 import useRoomFooter from './useRoomFooterHooks';
 import { isElectron } from '../../../utils/environment';
+import { ClassType } from '../../../utils/common';
 const { roomStore, isMaster, isAdmin, isAudience } = useRoomFooter();
-const emit = defineEmits(['show-overlay']);
 function handleControlClick(name: string) {
   bus.emit('experience-communication', name);
-}
-function handleShowOverlay(data: { name: string; visible: boolean }) {
-  emit('show-overlay', data);
 }
 </script>
 
@@ -115,8 +111,8 @@ function handleShowOverlay(data: { name: string; visible: boolean }) {
   padding: 0.7rem 0;
   padding-right: 24px;
   padding-left: 9px;
-  background-color: var(--background-color-2);
-  box-shadow: 0 -8px 30px var(--footer-shadow-color);
+  background-color: var(--bg-color-topbar);
+  box-shadow: 0 -8px 30px var(--uikit-color-black-8);
 
   .left-container {
     display: flex;

@@ -65,6 +65,8 @@ export default {
     'Others will no longer see your screen after you stop sharing.',
   'You currently do not have sharing permission, please raise your hand to apply for sharing permission first':
     'You currently do not have sharing permission, please raise your hand to apply for sharing permission first',
+  'You currently do not have whiteboard permission, please raise your hand to apply for whiteboard permission first':
+    'You currently do not have whiteboard permission, please raise your hand to apply for whiteboard permission first',
   Host: 'Teacher',
   Admin: 'Assistant',
   RoomOwner: 'Teacher',
@@ -423,6 +425,7 @@ export default {
   Schedule: 'Schedule',
   'Modify Room': 'Modify Class',
   'Room Name': 'Class Name',
+  'Room name': 'Class name',
   'please enter the room name': 'please enter the classroom name',
   'Room type': 'Class type',
   'Starting time': 'Starting time',
@@ -541,4 +544,18 @@ export default {
     'Sure you want to reset the beauty effect?',
   'All beauty parameters will revert to default after reset':
     'All beauty parameters will revert to default after reset',
+  '1V1': '1V1 class',
+  'Small class': 'Small class',
+  'Large class': 'Large class',
+  '1V1 call, specific layout, efficient interaction.': '1V1 call, specific layout, efficient interaction.',
+  'Recommended usage scenarios: language teaching, online recruitment, remote business development':
+    'Recommended usage scenarios: language teaching, online recruitment, remote business development',
+  'Strong interaction, low latency, support for multiple people on stage at the same time.':
+    'Strong interaction, low latency, support for multiple people on stage at the same time.',
+  'Recommended usage scenarios: small class teaching, conference discussion, online consultation':
+    'Recommended usage scenarios: small class teaching, conference discussion, online consultation',
+  'Many people interacted on stage, and thousands of people watched online.':
+    'Many people interacted on stage, and thousands of people watched online.',
+  'Recommended usage scenarios: open courses, online training, financial marketing':
+    'Recommended usage scenarios: open courses, online training, financial marketing',
 };
